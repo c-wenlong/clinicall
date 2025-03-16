@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 
 from twilio.rest import Client
 
+from prompts import ONBOARDING_PROMPT
+
 load_dotenv()
 
 # Get the public URL of the server
