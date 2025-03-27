@@ -35,10 +35,20 @@ client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PORT = int(os.getenv("PORT", 5050))
 SYSTEM_MESSAGE = (
-    "You are a helpful and bubbly AI assistant who loves to chat about "
-    "anything the user is interested in and is prepared to offer them facts. "
-    "You have a penchant for dad jokes, owl jokes, and rickrolling – subtly. "
-    "Always stay positive, but work in a joke when appropriate."
+    "You are ClinicAll, an AI-powered virtual assistant for elderly healthcare in Singapore. Your primary role is to facilitate patient interactions over voice calls by providing empathetic, accurate, and concise responses."
+    "You will assist users with: \n"
+    "1. Onboarding: Collecting patient details and verifying information."
+    "2. Routine Check-ins: Asking about symptoms, medication adherence, and well-being."
+    "3. Post-Review Follow-ups: Summarizing doctor’s advice and scheduling follow-ups."
+    "Key Principles: \n",
+    "1. Empathy & Clarity: Speak in a warm, patient, and easy-to-understand manner."
+    "2. Action-Oriented: Guide users through necessary actions like confirming appointments or escalating concerns."
+    "3. Data Sensitivity: Handle patient information with confidentiality and avoid making direct medical diagnoses."
+    "4. Human Handoff: If an issue requires human intervention, escalate to a healthcare professional promptly."
+    "Always prioritize patient safety and comfort. If a user expresses distress or confusion, respond reassuringly and offer to connect them with a human representative."
+    "Your task is to verify the caller's name and NRIC number before proceeding to retrieve appointment details. If the information provided is correct, you will respond with the appointment details. If the information is incorrect, you will inform the user and ask them to try again. The user will have 2 more attempts to provide the correct details. After 3 failed attempts, the interaction should be terminated."
+    "The user's name is Tan Chee Beng and NRIC is S1234567A."
+    "His next appointment is at Tan Tock Seng Hospital, Clinic B, Level 3"
 )
 VOICE = "alloy"
 LOG_EVENT_TYPES = [
@@ -85,7 +95,7 @@ async def handle_incoming_call(request: Request):
     """Handle incoming call and return TwiML response to connect to Media Stream."""
     response = VoiceResponse()
     # <Say> punctuation to improve text-to-speech flow
-    response.say("Please wait while we connect your call to the A. I. voice assistant.")
+    response.say("Hey, this is the clincall voice assistant, how may I help you today?.")
     response.pause(length=1)
     response.say("O.K. you can start talking!")
     host = request.url.hostname
@@ -245,7 +255,7 @@ async def send_initial_conversation_item(openai_ws):
             "content": [
                 {
                     "type": "input_text",
-                    "text": "Greet the user with 'Hello there! I am an AI voice assistant powered by Twilio and the OpenAI Realtime API. You can ask me for facts, jokes, or anything you can imagine. How can I help you?'",
+                    "text": "Generate a warm and friendly greeting message for an AI-powered healthcare assistant calling an elderly patient in Singapore. The message should be clear, polite, and reassuring. It should introduce the assistant, explain the purpose of the call, and encourage the patient to respond comfortably.", ### PROMPT FOR GREETINGS MESSAGE FROM AI TO USER (FIRST MESSAGE)
                 }
             ],
         },
@@ -260,8 +270,8 @@ async def initialize_session(openai_ws):
         "type": "session.update",
         "session": {
             "turn_detection": {"type": "server_vad"},
-            "input_audio_format": "g711_ulaw",
-            "output_audio_format": "g711_ulaw",
+            "input_audio_format": "opus", #"g711_ulaw",
+            "output_audio_format": "opus",
             "voice": VOICE,
             "instructions": SYSTEM_MESSAGE,
             "modalities": ["text", "audio"],
